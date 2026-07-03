@@ -1,8 +1,8 @@
 class Solution {
 public:
-//done
     bool findSafeWalk(vector<vector<int>>& grid, int health) {
-        int m = grid.size(), n = grid[0].size();
+        int m = grid.size();
+        int n = grid[0].size();
 
         vector<vector<int>> dist(m, vector<int>(n, INT_MAX));
         deque<pair<int, int>> dq;
