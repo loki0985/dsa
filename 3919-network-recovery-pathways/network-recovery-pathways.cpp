@@ -1,80 +1,63 @@
 class Solution {
 public:
-    using ll = long long;
-    const ll INF = (ll)4e18;
-
     int findMaxPathScore(vector<vector<int>>& edges, vector<bool>& online, long long k) {
         int n = online.size();
 
-        vector<vector<pair<int,int>>> graph(n);
-        vector<int> indegree(n, 0);
+        vector<vector<pair<int,int>>> adj(n);
+        vector<int> indegree(n);
 
-        int maxCost = 0;
-
+        int mxCost = 0;
         for (auto &e : edges) {
-            int u = e[0];
-            int v = e[1];
-            int w = e[2];
-            graph[u].push_back({v, w});
-            indegree[v]++;
-            maxCost = max(maxCost, w);
+            adj[e[0]].push_back({e[1], e[2]});
+            indegree[e[1]]++;
+            mxCost = max(mxCost, e[2]);
         }
 
-        // Topological Sort
+        // Topological order
         queue<int> q;
         vector<int> topo;
+        vector<int> deg = indegree;
 
-        for (int i = 0; i < n; i++) {
-            if (indegree[i] == 0)
-                q.push(i);
-        }
+        for (int i = 0; i < n; i++)
+            if (deg[i] == 0) q.push(i);
 
         while (!q.empty()) {
             int u = q.front();
             q.pop();
             topo.push_back(u);
 
-            for (auto &edge : graph[u]) {
-                int v = edge.first;
-                if (--indegree[v] == 0)
+            for (auto &[v, w] : adj[u]) {
+                if (--deg[v] == 0)
                     q.push(v);
             }
         }
 
         auto check = [&](int limit) {
-            vector<ll> dist(n, INF);
+            const long long INF = (1LL << 60);
+            vector<long long> dist(n, INF);
             dist[0] = 0;
 
             for (int u : topo) {
-                if (dist[u] == INF)
-                    continue;
+                if (dist[u] == INF) continue;
 
                 if (u != 0 && u != n - 1 && !online[u])
                     continue;
 
-                for (auto &edge : graph[u]) {
-                    int v = edge.first;
-                    int w = edge.second;
+                for (auto &[v, w] : adj[u]) {
+                    if (w < limit) continue;
+                    if (v != n - 1 && !online[v]) continue;
 
-                    if (w < limit)
-                        continue;
-
-                    if (v != n - 1 && !online[v])
-                        continue;
-
-                    dist[v] = min(dist[v], dist[u] + (ll)w);
+                    dist[v] = min(dist[v], dist[u] + (long long)w);
                 }
             }
 
             return dist[n - 1] <= k;
         };
 
-        int lo = 0, hi = maxCost;
-        int ans = -1;
+        int lo = 0, hi = mxCost, ans = -1;
 
         while (lo <= hi) {
             int mid = lo + (hi - lo) / 2;
-
             if (check(mid)) {
                 ans = mid;
                 lo = mid + 1;
